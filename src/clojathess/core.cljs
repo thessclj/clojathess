@@ -1,10 +1,11 @@
 (ns clojathess.core
-    (:require [reagent.core :as r]))
+    (:require [reagent.core :as r]
+              [clojathess.engine :as engine]))
 
 ;; -------------
 ;; State
 
-(defonce app-state (r/atom {:text ["Hello world!"]}))
+(defonce app-state (r/atom {:text []}))
 
 ;; -------------------------
 ;; Views
@@ -20,8 +21,7 @@
          :on-change   #(reset! input (-> % .-target .-value))
          :on-key-down #(case (.-which %)
                          13 (do
-                              (swap! app-state update-in [:text] (fn [coll e] (take 5 (cons e coll))) @input)
-                              (println @app-state)
+                              (swap! app-state update-in [:text] (fn [coll e] (take 5 (cons (engine/process e) coll))) @input)
                               (reset! input ""))
                          nil)}]])))
 
@@ -36,7 +36,7 @@
   [:div.container.main-wrapper
    [:div.row
     [:h2 "Welcome to thess clj(s) adventure"]
-    [:p.intro "Give a command using the input box below. For example 'look' or 'move east'."]
+    [:p.intro "Give a command using the input box below. For example 'look' or 'move downstairs'."]
     [input-section]
     [output-section]]])
 
