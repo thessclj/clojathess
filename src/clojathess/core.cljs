@@ -1,19 +1,50 @@
 (ns clojathess.core
-    (:require [reagent.core :as reagent]))
+    (:require [reagent.core :as r]))
+
+;; -------------
+;; State
+
+(defonce app-state (r/atom {:text ["Hello world!"]}))
 
 ;; -------------------------
 ;; Views
 
-(defn home-page []
-  [:div.container
+(defn input-section []
+  (let [input (r/atom "")]
+    (fn []
+      [:div
+       [:input.u-full-width
+        {:type        "text"
+         :placeholder "Type a command"
+         :value       @input
+         :on-change   #(reset! input (-> % .-target .-value))
+         :on-key-down #(case (.-which %)
+                         13 (do
+                              (swap! app-state update-in [:text] (fn [coll e] (take 5 (cons e coll))) @input)
+                              (println @app-state)
+                              (reset! input ""))
+                         nil)}]])))
+
+(defn output-section []
+  [:div
+   (let [text (:text @app-state)
+         size (count text)]
+     (for [i (-> size range)]
+       ^{:key i} [:p.engine-text {:style {:opacity (/ (- size i) size)}} (nth text i)]))])
+
+(defn main-wrapper []
+  [:div.container.main-wrapper
    [:div.row
-    [:h1 "Welcome to Reagent"]]])
+    [:h2 "Welcome to thess clj(s) adventure"]
+    [:p.intro "Give a command using the input box below. For example 'look' or 'move east'."]
+    [input-section]
+    [output-section]]])
 
 ;; -------------------------
 ;; Initialize app
 
 (defn mount-root []
-  (reagent/render [home-page] (.getElementById js/document "app")))
+  (r/render [main-wrapper] (.getElementById js/document "app")))
 
 (defn init! []
   (mount-root))
